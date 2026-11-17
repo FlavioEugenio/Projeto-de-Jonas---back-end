@@ -126,6 +126,8 @@ Subir a aplicação, que nesta etapa só cria o esquema do banco:
 ## Equipe
 
 <!-- Preencha com os nomes dos integrantes -->
-- Integrante 1
-- Integrante 2
-- Integrante 3
+- Flavio Eugenio
+- Eike Sales
+- Miguel Angelus
+- Gustavo Interaminense
+- Igor Maia
