@@ -91,10 +91,25 @@ As consultas que cruzam vários pedidos ficam no `service`, pois precisam do ban
 
 ## Tecnologias
 
-- Java 21
-- Spring Boot 3.3 (Spring Data JPA / Hibernate)
-- H2 em memória para desenvolvimento e testes
-- JUnit 5 e AssertJ
+### Usadas nesta etapa (modelagem do domínio)
+
+- **Java 21**: linguagem do projeto.
+- **Spring Boot 3.3**: configura a aplicação e o banco automaticamente.
+- **Spring Data JPA com Hibernate**: mapeia as classes Java para tabelas do banco por meio das anotações JPA (`@Entity`, `@ManyToOne` e outras).
+- **H2 em memória**: banco de dados que roda dentro da própria aplicação e some quando ela é desligada. Serve para desenvolver e testar sem instalar nada. O esquema é criado a partir das entidades.
+- **JUnit 5**: biblioteca para escrever e executar testes automáticos.
+- **AssertJ**: biblioteca de verificações que deixa os testes legíveis. Por exemplo, `assertThat(pedido.getSaldo()).isEqualByComparingTo("225.00")`.
+- **Maven**: gerencia as dependências e executa o build e os testes. O Maven Wrapper (`mvnw`) dispensa a instalação.
+
+### Planejadas para a aplicação web (próximas etapas)
+
+- **Spring Web (REST)**: controllers que expõem os pedidos em JSON, para o front-end consumir.
+- **Bean Validation**: validação dos dados que chegam nos endpoints, antes de chegar ao domínio.
+- **Spring Security com BCrypt**: login individual, controle por perfil (atendimento, produção e dono) e senhas guardadas como hash.
+- **PostgreSQL**: banco de dados de produção, no lugar do H2.
+- **Front-end web (HTML, CSS e JavaScript)**: telas de pedidos, agenda e compras, seguindo o protótipo da V1. Funciona no celular e no computador, sem instalação.
+
+As tecnologias planejadas ainda serão confirmadas pela equipe e podem mudar.
 
 ## Como executar
 
