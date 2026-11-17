@@ -1,5 +1,3 @@
-# Projeto-de-Jonas---back-end
-
 # Fichário de Encomendas
 
 Sistema de pedidos para uma pequena empresa de produtos personalizados sob encomenda.
