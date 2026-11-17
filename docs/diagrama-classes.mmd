@@ -1,0 +1,188 @@
+---
+title: Fichario de Encomendas - diagrama de classes do dominio
+---
+classDiagram
+direction LR
+
+class Pedido {
+  <<raiz do agregado>>
+  -Long id
+  -Long versao
+  -int quantidade
+  -String personalizacao
+  -String observacoes
+  -LocalDate dataEntrega
+  -BigDecimal valorTotal
+  -StatusPedido status
+  -CanalOrigem canal
+  -boolean confirmadoPeloCliente
+  -String motivoCancelamento
+  -LocalDateTime criadoEm
+  +Pedido(cliente, produto, quantidade, personalizacao, dataEntrega, valorTotal, canal, criadoPor)
+  +alterarPersonalizacao(String nova, Usuario autor)
+  +alterarQuantidade(int nova, Usuario autor)
+  +alterarDataEntrega(LocalDate nova, Usuario autor)
+  +alterarObservacoes(String novas, Usuario autor)
+  +alterarValorTotal(BigDecimal novo, Usuario autor)
+  +confirmarPeloCliente(Usuario autor)
+  +registrarDataAcimaDoLimite(ConfiguracaoAgenda agenda, long pedidosNoDia, Usuario autor)
+  +adicionarMaterial(Material material, Usuario autor)
+  +removerMaterial(Material material, Usuario autor)
+  +marcarMaterialDisponivel(Material material, Usuario autor)
+  +marcarMaterialEmFalta(Material material, Usuario autor)
+  +confirmarCiencia(Usuario responsavel)
+  +iniciarProducao(Usuario autor)
+  +aguardarMaterial(Usuario autor)
+  +marcarPronto(Usuario autor)
+  +voltarParaProducao(Usuario autor)
+  +registrarPagamento(BigDecimal valor, FormaPagamento forma, Usuario autor) Pagamento
+  +corrigirPagamento(Pagamento pagamento, BigDecimal novoValor, String motivo, Usuario autor)
+  +registrarEntrega(BigDecimal valorRecebido, FormaPagamento forma, String recebidoPor, Usuario autor)
+  +cancelar(String motivo, Usuario autor)
+  +getValorPago() BigDecimal
+  +getSaldo() BigDecimal
+  +possuiAlteracoesPendentes() boolean
+}
+
+class Cliente {
+  -Long id
+  -String nome
+  -String telefone
+  -String instagram
+  -String observacoes
+  +Cliente(String nome, String telefone)
+  +atualizarNome(String novoNome)
+  +atualizarTelefone(String novoTelefone)
+  +atualizarInstagram(String novoInstagram)
+  +atualizarObservacoes(String novas)
+}
+
+class Produto {
+  -Long id
+  -String nome
+  -boolean ativo
+  +Produto(String nome)
+  +renomear(String novoNome)
+  +adicionarMaterialPadrao(Material material)
+  +removerMaterialPadrao(Material material)
+  +desativar()
+  +reativar()
+}
+
+class Material {
+  -Long id
+  -String nome
+  +Material(String nome)
+  +renomear(String novoNome)
+}
+
+class MaterialPedido {
+  -Long id
+  -boolean disponivel
+  ~marcarDisponivel()
+  ~marcarEmFalta()
+}
+
+class Pagamento {
+  -Long id
+  -BigDecimal valor
+  -FormaPagamento forma
+  -LocalDateTime registradoEm
+  -String recebidoPor
+  -BigDecimal valorOriginal
+  -String motivoCorrecao
+  ~corrigir(BigDecimal novoValor, String motivo, Usuario autor)
+  +foiCorrigido() boolean
+}
+
+class Alteracao {
+  -Long id
+  -String campo
+  -String valorAnterior
+  -String valorNovo
+  -LocalDateTime alteradoEm
+  -boolean exigeCiencia
+  -LocalDateTime cienciaEm
+  ~registrarCiencia(Usuario responsavel)
+  +isPendente() boolean
+}
+
+class EventoPedido {
+  -Long id
+  -String descricao
+  -LocalDateTime ocorridoEm
+}
+
+class Usuario {
+  -Long id
+  -String nome
+  -String login
+  -String senhaHash
+  -Perfil perfil
+  -boolean ativo
+  +Usuario(String nome, String login, String senhaHash, Perfil perfil)
+  +alterarPerfil(Perfil novo)
+  +trocarSenha(String novoSenhaHash)
+  +desativar()
+  +reativar()
+  +exigirPerfil(Perfil... permitidos)
+}
+
+class ConfiguracaoAgenda {
+  -Long id
+  -int limitePedidosPorDia
+  +ConfiguracaoAgenda(int limite)
+  +alterarLimite(int novoLimite, Usuario autor)
+  +comportaMaisUmPedido(long pedidosNoDia) boolean
+}
+
+class StatusPedido {
+  <<enumeration>>
+  RECEBIDO
+  AGUARDANDO_MATERIAL
+  EM_PRODUCAO
+  PRONTO
+  ENTREGUE
+  CANCELADO
+}
+
+class CanalOrigem {
+  <<enumeration>>
+  WHATSAPP
+  INSTAGRAM
+  PRESENCIAL
+}
+
+class FormaPagamento {
+  <<enumeration>>
+  PIX
+  DINHEIRO
+  CARTAO
+  TRANSFERENCIA
+}
+
+class Perfil {
+  <<enumeration>>
+  ATENDIMENTO
+  PRODUCAO
+  DONO
+}
+
+Pedido "0..*" --> "1" Cliente : cliente
+Pedido "0..*" --> "1" Produto : produto
+Pedido "0..*" --> "1" Usuario : criadoPor
+Pedido "1" *-- "0..*" MaterialPedido : materiais
+Pedido "1" *-- "0..*" Pagamento : pagamentos
+Pedido "1" *-- "0..*" Alteracao : alteracoes
+Pedido "1" *-- "1..*" EventoPedido : historico
+MaterialPedido "0..*" --> "1" Material : material
+Produto "0..*" --> "0..*" Material : materiaisPadrao
+Pagamento "0..*" --> "1" Usuario : registradoPor
+Pagamento "0..*" --> "0..1" Usuario : corrigidoPor
+Alteracao "0..*" --> "1" Usuario : alteradoPor
+Alteracao "0..*" --> "0..1" Usuario : cienciaPor
+EventoPedido "0..*" --> "1" Usuario : autor
+Pedido ..> StatusPedido
+Pedido ..> CanalOrigem
+Pagamento ..> FormaPagamento
+Usuario ..> Perfil
