@@ -144,5 +144,5 @@ Subir a aplicação, que nesta etapa só cria o esquema do banco:
 - Flavio Eugenio
 - Eike Sales
 - Miguel Angelus
-- Gustavo Interaminense
+- Gustavo Interamnense
 - Igor Maia
