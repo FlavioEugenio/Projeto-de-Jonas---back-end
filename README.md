@@ -1,6 +1,6 @@
 # Fichário de Encomendas
 
-Sistema de pedidos para uma pequena empresa de produtos personalizados sob encomenda
+Sistema de pedidos para uma pequena empresa de produtos personalizados sob encomenda.
 
 Hoje os pedidos chegam por WhatsApp, Instagram e balcão e ficam espalhados em celulares, cadernos e planilhas. Isso causa três erros recorrentes:
 
