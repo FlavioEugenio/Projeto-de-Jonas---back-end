@@ -5,10 +5,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-/**
- * Registro de uma mudanca em um campo do pedido.
- * Quando afeta a producao, fica pendente ate a producao confirmar ciencia.
- */
+/** Mudanca feita no pedido. Fica pendente ate a producao confirmar ciencia. */
 @Entity
 @Table(name = "alteracao")
 public class Alteracao {
@@ -37,9 +34,6 @@ public class Alteracao {
     @Column(name = "alterado_em", nullable = false)
     private LocalDateTime alteradoEm;
 
-    @Column(name = "exige_ciencia", nullable = false)
-    private boolean exigeCiencia;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ciencia_por_id")
     private Usuario cienciaPor;
@@ -50,14 +44,12 @@ public class Alteracao {
     protected Alteracao() {
     }
 
-    Alteracao(Pedido pedido, String campo, String valorAnterior, String valorNovo,
-              Usuario alteradoPor, boolean exigeCiencia) {
+    Alteracao(Pedido pedido, String campo, String valorAnterior, String valorNovo, Usuario alteradoPor) {
         this.pedido = pedido;
         this.campo = campo;
         this.valorAnterior = valorAnterior;
         this.valorNovo = valorNovo;
         this.alteradoPor = alteradoPor;
-        this.exigeCiencia = exigeCiencia;
         this.alteradoEm = LocalDateTime.now();
     }
 
@@ -66,19 +58,16 @@ public class Alteracao {
         this.cienciaEm = LocalDateTime.now();
     }
 
-    /** Pendente: exige ciencia e a producao ainda nao confirmou. */
     public boolean isPendente() {
-        return exigeCiencia && cienciaEm == null;
+        return cienciaEm == null;
     }
 
     public Long getId() { return id; }
-    public Pedido getPedido() { return pedido; }
     public String getCampo() { return campo; }
     public String getValorAnterior() { return valorAnterior; }
     public String getValorNovo() { return valorNovo; }
     public Usuario getAlteradoPor() { return alteradoPor; }
     public LocalDateTime getAlteradoEm() { return alteradoEm; }
-    public boolean isExigeCiencia() { return exigeCiencia; }
     public Usuario getCienciaPor() { return cienciaPor; }
     public LocalDateTime getCienciaEm() { return cienciaEm; }
 }

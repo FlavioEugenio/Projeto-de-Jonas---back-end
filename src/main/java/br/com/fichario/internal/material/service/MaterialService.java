@@ -52,7 +52,7 @@ public class MaterialService {
     @Transactional(readOnly = true)
     public List<ItemCompraResponse> listarCompras() {
         List<Pedido> pedidos = pedidoRepository.findByStatusInOrderByDataEntregaAsc(
-                List.of(StatusPedido.RECEBIDO, StatusPedido.AGUARDANDO_MATERIAL));
+                List.of(StatusPedido.RECEBIDO));
         return pedidos.stream()
                 .flatMap(pedido -> pedido.getMateriaisEmFalta().stream()
                         .map(item -> new ItemCompraResponse(

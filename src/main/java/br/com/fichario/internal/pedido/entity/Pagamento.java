@@ -6,10 +6,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Valor recebido de um pedido (sinal, parcial ou saldo na entrega).
- * Nao e editado diretamente: correcoes passam pelo {@link Pedido} e guardam o valor original.
- */
+/** Valor recebido de um pedido: sinal, parcial ou saldo na entrega. Criado somente pelo Pedido. */
 @Entity
 @Table(name = "pagamento")
 public class Pagamento {
@@ -40,16 +37,6 @@ public class Pagamento {
     @Column(name = "recebido_por", length = 100)
     private String recebidoPor;
 
-    @Column(name = "valor_original", precision = 10, scale = 2)
-    private BigDecimal valorOriginal;
-
-    @Column(name = "motivo_correcao", length = 300)
-    private String motivoCorrecao;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "corrigido_por_id")
-    private Usuario corrigidoPor;
-
     protected Pagamento() {
     }
 
@@ -62,27 +49,10 @@ public class Pagamento {
         this.registradoEm = LocalDateTime.now();
     }
 
-    void corrigir(BigDecimal novoValor, String motivo, Usuario autor) {
-        if (valorOriginal == null) {
-            valorOriginal = valor;
-        }
-        this.valor = novoValor;
-        this.motivoCorrecao = motivo;
-        this.corrigidoPor = autor;
-    }
-
-    public boolean foiCorrigido() {
-        return valorOriginal != null;
-    }
-
     public Long getId() { return id; }
-    public Pedido getPedido() { return pedido; }
     public BigDecimal getValor() { return valor; }
     public FormaPagamento getForma() { return forma; }
     public LocalDateTime getRegistradoEm() { return registradoEm; }
     public Usuario getRegistradoPor() { return registradoPor; }
     public String getRecebidoPor() { return recebidoPor; }
-    public BigDecimal getValorOriginal() { return valorOriginal; }
-    public String getMotivoCorrecao() { return motivoCorrecao; }
-    public Usuario getCorrigidoPor() { return corrigidoPor; }
 }
