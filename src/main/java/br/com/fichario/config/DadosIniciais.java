@@ -1,10 +1,10 @@
 package br.com.fichario.config;
 
-import br.com.fichario.domain.model.Cliente;
-import br.com.fichario.domain.model.Material;
-import br.com.fichario.domain.model.Perfil;
-import br.com.fichario.domain.model.Produto;
-import br.com.fichario.domain.model.Usuario;
+import br.com.fichario.internal.cliente.entity.Cliente;
+import br.com.fichario.internal.material.entity.Material;
+import br.com.fichario.internal.produto.entity.Produto;
+import br.com.fichario.internal.usuario.entity.Perfil;
+import br.com.fichario.internal.usuario.entity.Usuario;
 import jakarta.persistence.EntityManager;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;

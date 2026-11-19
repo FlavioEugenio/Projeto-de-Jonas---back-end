@@ -10,7 +10,7 @@ Hoje os pedidos chegam por WhatsApp, Instagram e balcão e ficam espalhados em c
 
 O sistema cria uma **fonte única sobre cada pedido**: dados, alterações, materiais, pagamentos, status e histórico.
 
-Esta é a **Etapa 2** do projeto: modelagem do domínio e definição da arquitetura. Controllers, services e endpoints ficam para a próxima etapa.
+A **Etapa 2** fez a modelagem do domínio e definiu a arquitetura. A **Etapa 3** implementou os endpoints, um conjunto por integrante, e organizou o código por módulo.
 
 ## Escopo da primeira versão
 
@@ -59,7 +59,7 @@ As entidades não têm setters públicos. Cada mudança de estado é um método 
 
 ## Arquitetura
 
-**Arquitetura em camadas** (Controller, Service, Repository), com **modelo de domínio rico**: as regras de negócio ficam nas entidades, e não espalhadas pelos services.
+**Arquitetura em camadas** (Controller, Service, Repository), com **modelo de domínio rico**: as regras de negócio ficam nas entidades, e não espalhadas pelos services. O código é **organizado por módulo**: cada funcionalidade tem sua pasta, e as camadas ficam dentro dela.
 
 ### Justificativa
 
@@ -72,26 +72,47 @@ As entidades não têm setters públicos. Cada mudança de estado é um método 
 
 ```
 src/main/java/br/com/fichario
-├── FicharioApplication.java      ponto de entrada do Spring Boot
-├── domain
-│   ├── model                     entidades JPA, enums e regras de negócio (Etapa 2)
-│   └── exception                 RegraDeNegocioException
-├── repository                    interfaces Spring Data JPA (próxima etapa)
-├── service                       casos de uso e transações: busca, chama o domínio e salva (próxima etapa)
-└── controller                    endpoints REST e DTOs de entrada e saída (próxima etapa)
+├── FicharioApplication.java        ponto de entrada do Spring Boot
+├── config
+│   ├── DadosIniciais.java          dados de exemplo ao subir a aplicação
+│   └── exception                   TratadorDeErros: exceções viram JSON
+├── internal                        um pacote por módulo do negócio
+│   ├── cliente                     controller, dto, entity, mapper, repository, service
+│   ├── pedido                      controller, dto, entity, mapper, repository, service
+│   ├── alteracao                   controller, dto, mapper, repository, service
+│   ├── producao                    controller, dto, mapper, service
+│   ├── pagamento                   controller, dto, mapper, service
+│   ├── material                    controller, dto, entity, mapper, repository, service
+│   ├── produto                     entity, repository
+│   ├── usuario                     entity, repository
+│   └── agenda                      entity
+└── shared
+    ├── exception                   RegraDeNegocioException, RecursoNaoEncontradoException
+    └── util                        Validacao, usada pelas entidades
 ```
+
+Dentro de cada módulo:
+
+- `controller`: endpoints REST;
+- `dto`: dados de entrada (com Bean Validation) e de saída;
+- `mapper`: converte a entidade para o DTO de saída;
+- `service`: casos de uso e transações: busca no banco, chama o domínio e salva;
+- `repository`: interfaces Spring Data JPA;
+- `entity`: entidades JPA e regras de negócio.
+
+`Pedido` é a raiz do agregado. `Pagamento`, `Alteracao`, `MaterialPedido` e `EventoPedido` ficam em `pedido/entity`, no mesmo pacote do `Pedido`, porque só ele pode criá-los e alterá-los. Por isso os módulos `alteracao` e `pagamento` não têm `entity`: eles trabalham sobre o `Pedido`.
 
 Regras de dependência:
 
 - `controller` usa `service`;
-- `service` usa `repository` e `domain`;
-- `domain` não depende de nenhuma outra camada.
+- `service` usa `repository`, `mapper` e as entidades, inclusive de outros módulos;
+- as entidades não dependem de nenhuma outra camada.
 
-As consultas que cruzam vários pedidos ficam no `service`, pois precisam do banco. É o caso de contar os pedidos de um dia para comparar com o limite da agenda.
+As consultas que cruzam vários pedidos ficam no `service`, pois precisam do banco. É o caso da fila da produção e da lista de compras.
 
 ## Tecnologias
 
-### Usadas nesta etapa (modelagem do domínio)
+### Usadas no projeto
 
 - **Java 21**: linguagem do projeto.
 - **Spring Boot 3.3**: configura a aplicação e o banco automaticamente.
@@ -99,12 +120,12 @@ As consultas que cruzam vários pedidos ficam no `service`, pois precisam do ban
 - **H2 em memória**: banco de dados que roda dentro da própria aplicação e some quando ela é desligada. Serve para desenvolver e testar sem instalar nada. O esquema é criado a partir das entidades.
 - **JUnit 5**: biblioteca para escrever e executar testes automáticos.
 - **AssertJ**: biblioteca de verificações que deixa os testes legíveis. Por exemplo, `assertThat(pedido.getSaldo()).isEqualByComparingTo("225.00")`.
+- **Spring Web (REST)**: controllers que expõem os pedidos em JSON.
+- **Bean Validation**: validação dos dados que chegam nos endpoints, antes de chegar ao domínio.
 - **Maven**: gerencia as dependências e executa o build e os testes. O Maven Wrapper (`mvnw`) dispensa a instalação.
 
 ### Planejadas para a aplicação web (próximas etapas)
 
-- **Spring Web (REST)**: controllers que expõem os pedidos em JSON, para o front-end consumir.
-- **Bean Validation**: validação dos dados que chegam nos endpoints, antes de chegar ao domínio.
 - **Spring Security com BCrypt**: login individual, controle por perfil (atendimento, produção e dono) e senhas guardadas como hash.
 - **PostgreSQL**: banco de dados de produção, no lugar do H2.
 - **Front-end web (HTML, CSS e JavaScript)**: telas de pedidos, agenda e compras, seguindo o protótipo da V1. Funciona no celular e no computador, sem instalação.
@@ -131,8 +152,9 @@ Os testes cobrem:
 
 - `PedidoTest`: regras de negócio, sem banco.
 - `MapeamentoJpaTest`: salva um pedido com todos os relacionamentos no H2 e lê de volta, conferindo o mapeamento JPA.
+- Um teste por módulo (`CadastroPedidosTest`, `AlteracoesPedidoTest`, `StatusProducaoTest`, `ControlePagamentosTest` e `MateriaisComprasTest`): chamam os endpoints de verdade, com o H2 e os dados iniciais.
 
-Subir a aplicação, que nesta etapa só cria o esquema do banco:
+Subir a aplicação em `http://localhost:8080`. Os dados de exemplo são criados ao subir (usuários 1 = Ana, atendimento; 2 = Beto, produção; 3 = Marcos, dono). Nas operações, o id de quem faz vai no cabeçalho `X-Usuario-Id`:
 
 ```bash
 ./mvnw spring-boot:run
