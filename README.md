@@ -1,188 +1,111 @@
 # Fichário de Encomendas
 
-Sistema de pedidos para uma pequena empresa de produtos personalizados sob encomenda.
+Sistema de pedidos para uma pequena empresa de produtos personalizados sob encomenda, desenvolvido com Java e Spring Boot.
 
-Hoje os pedidos chegam por WhatsApp, Instagram e balcão e ficam espalhados em celulares, cadernos e planilhas. Isso causa três erros recorrentes:
+## Sobre o projeto
 
-- alterações que não chegam à produção;
-- produção iniciada sem o material necessário;
-- entregas feitas sem conferir o saldo a receber.
+Hoje os pedidos da empresa chegam por WhatsApp, Instagram e balcão e ficam espalhados em celulares, cadernos e planilhas. Com isso, alterações não chegam à produção, a produção começa sem o material necessário e produtos são entregues sem conferir o pagamento.
 
-O sistema cria uma **fonte única sobre cada pedido**: dados, alterações, materiais, pagamentos, status e histórico.
+O Fichário de Encomendas centraliza cada pedido em um só lugar: dados do cliente, alterações, materiais, pagamentos e andamento da produção.
 
-A **Etapa 2** fez a modelagem do domínio e definiu a arquitetura. A **Etapa 3** implementou os endpoints, um conjunto por integrante, e organizou o código por módulo.
+## Funcionalidades
 
-## Escopo da primeira versão
+- Cadastro e consulta de clientes.
+- Registro e consulta de pedidos.
+- Alterações do pedido, que só valem depois que a produção confirma que viu.
+- Fila e andamento da produção.
+- Registro de pagamentos e entrega, que só é feita com o saldo quitado.
+- Controle dos materiais de cada pedido e lista do que falta comprar.
 
-- O atendente registra o pedido feito pelo cliente no WhatsApp. Não há bot nem integração automática.
-- Uma alteração feita pelo atendimento fica pendente até a produção confirmar ciência.
-- A produção só começa com todos os materiais disponíveis.
-- O saldo é calculado pelo sistema, a partir dos pagamentos, e nunca digitado.
-- A entrega só fecha com o saldo completo recebido e com o nome de quem recebeu.
-- Somente o dono cancela pedidos e corrige pagamentos, sempre com motivo registrado.
-- Um limite de pedidos por dia avisa o atendente antes de prometer um prazo.
+## Tecnologias utilizadas
 
-## Diagrama de classes
-
-![Diagrama de classes do domínio](docs/diagrama-classes.svg)
-
-Arquivos do diagrama:
-
-- [`docs/diagrama-classes.mmd`](docs/diagrama-classes.mmd): fonte em Mermaid. Edite este arquivo quando o modelo mudar.
-- [`docs/diagrama-classes.svg`](docs/diagrama-classes.svg) e [`docs/diagrama-classes.png`](docs/diagrama-classes.png): imagens geradas a partir da fonte.
-
-### Entidades
-
-| Entidade | Papel | Relacionamentos JPA |
-|---|---|---|
-| `Pedido` | Raiz do agregado. Concentra todas as regras do pedido. | `@ManyToOne` Cliente, Produto, Usuario (criadoPor). `@OneToMany` MaterialPedido, Pagamento, Alteracao, EventoPedido |
-| `Cliente` | Quem encomenda. Identificado pelo telefone, que é único. | Referenciado por Pedido |
-| `Produto` | Item do catálogo, com a lista padrão de materiais. | `@ManyToMany` Material (tabela `produto_material`) |
-| `Material` | Insumo da produção. | Referenciado por Produto e MaterialPedido |
-| `MaterialPedido` | Material de um pedido e sua situação: disponível ou falta comprar. | `@ManyToOne` Pedido, Material |
-| `Pagamento` | Sinal, parcial ou saldo. Correções guardam o valor original. | `@ManyToOne` Pedido, Usuario (registradoPor, corrigidoPor) |
-| `Alteracao` | Mudança de um campo, com ciência da produção. | `@ManyToOne` Pedido, Usuario (alteradoPor, cienciaPor) |
-| `EventoPedido` | Linha imutável do histórico. | `@ManyToOne` Pedido, Usuario (autor) |
-| `Usuario` | Funcionário com login e perfil. | Referenciado pelas entidades acima |
-| `ConfiguracaoAgenda` | Limite de pedidos por dia de entrega. | Nenhum |
-
-Enums: `StatusPedido`, `CanalOrigem`, `FormaPagamento` e `Perfil`.
-
-### Encapsulamento
-
-As entidades não têm setters públicos. Cada mudança de estado é um método com nome do negócio, que valida a regra antes de alterar o dado. Por exemplo, `alterarPersonalizacao`, `confirmarCiencia`, `registrarPagamento` e `registrarEntrega`.
-
-- `Pagamento`, `Alteracao`, `MaterialPedido` e `EventoPedido` são criados e alterados somente por `Pedido`. Por isso seus construtores e modificadores são visíveis apenas dentro do pacote.
-- As listas são devolvidas como somente leitura.
-- `Pedido` tem `@Version`, para impedir que duas pessoas salvem versões diferentes do mesmo pedido ao mesmo tempo.
-- Regras violadas lançam `RegraDeNegocioException`.
+- Java 21
+- Spring Boot
+- Spring Data JPA
+- Spring Web
+- Bean Validation
+- H2 (banco em memória)
+- Lombok
+- Maven
 
 ## Arquitetura
 
-**Arquitetura em camadas** (Controller, Service, Repository), com **modelo de domínio rico**: as regras de negócio ficam nas entidades, e não espalhadas pelos services. O código é **organizado por módulo**: cada funcionalidade tem sua pasta, e as camadas ficam dentro dela.
+O projeto adota uma **arquitetura monolítica em camadas, organizada por módulo (feature)**. A aplicação roda como um único serviço Spring Boot, e o código de cada área do negócio fica agrupado no seu módulo: clientes, pedidos, alterações, produção, pagamentos e materiais.
 
 ### Justificativa
 
-- **Necessidade do negócio.** O problema da empresa é de regras, e não de integração. Exemplos: só entregar com o saldo quitado, só produzir depois da ciência da alteração. Colocar essas regras nas entidades garante que valham em qualquer tela ou endpoint futuro, e permite testá-las sem banco nem servidor.
-- **Complexidade do sistema.** O sistema é um CRUD com regras, usado por uma equipe de oito pessoas e com um único banco de dados. Arquiteturas como a hexagonal ou a Clean Architecture pedem portas, adaptadores e mapeamento entre modelos. Isso dobraria o número de classes sem resolver um problema real desta empresa.
-- **Características da equipe.** A equipe está aprendendo Spring Boot e JPA. O padrão em camadas é o que o próprio Spring adota e o que mais aparece em documentação e exemplos, o que reduz a curva de aprendizado. Cada integrante entende onde cada código fica.
-- **Evolução.** Se no futuro surgir uma integração, como um formulário de pedidos ou a API do WhatsApp, ela entra como um novo controller ou service. O domínio não muda.
+Tudo na empresa gira em torno do pedido: ele pertence a um cliente e recebe alterações, materiais e pagamentos. Manter isso em uma única aplicação garante dados consistentes e simplifica a comunicação entre as partes.
+
+O sistema é um cadastro com regras, usado por uma equipe pequena e com um só banco de dados. O monólito em camadas separa bem as responsabilidades sem o custo de dividir o sistema em vários serviços. A organização por módulo ajuda a equipe, que está aprendendo Spring Boot, a encontrar o código de cada funcionalidade.
+
+As regras de negócio ficam nas entidades, principalmente no `Pedido`. Por exemplo: só entregar com o saldo quitado e só produzir com os materiais disponíveis. Assim as regras valem em qualquer endpoint.
 
 ### Organização do código
 
+```text
+br.com.fichario
+├── FicharioApplication.java
+├── config                  # dados de exemplo e tratamento de erros
+├── internal
+│   ├── cliente
+│   │   ├── controller      # endpoints HTTP
+│   │   ├── service         # casos de uso
+│   │   ├── repository      # acesso a dados com Spring Data JPA
+│   │   ├── dto             # dados de entrada e saída da API
+│   │   ├── mapper          # converte entidade em DTO
+│   │   └── entity          # entidades JPA e regras de negócio
+│   ├── pedido
+│   ├── alteracao
+│   ├── producao
+│   ├── pagamento
+│   ├── material
+│   ├── produto
+│   └── usuario
+└── shared                  # exceções e validações usadas por todos
 ```
-src/main/java/br/com/fichario
-├── FicharioApplication.java        ponto de entrada do Spring Boot
-├── config
-│   ├── DadosIniciais.java          dados de exemplo ao subir a aplicação
-│   └── exception                   TratadorDeErros: exceções viram JSON
-├── internal                        um pacote por módulo do negócio
-│   ├── cliente                     controller, dto, entity, mapper, repository, service
-│   ├── pedido                      controller, dto, entity, mapper, repository, service
-│   ├── alteracao                   controller, dto, service
-│   ├── producao                    controller, service
-│   ├── pagamento                   controller, dto, service
-│   ├── material                    controller, dto, entity, mapper, repository, service
-│   ├── produto                     entity, repository
-│   ├── usuario                     entity, repository
-│   └── agenda                      entity
-└── shared
-    ├── exception                   RegraDeNegocioException, RecursoNaoEncontradoException
-    └── util                        Validacao, usada pelas entidades
-```
 
-Dentro de cada módulo:
+Os módulos menores têm só os pacotes de que precisam. Os controllers recebem as requisições e chamam os services. Os services buscam os dados nos repositories e chamam as regras das entidades. Os DTOs definem o que a API recebe e devolve, sem expor as entidades.
 
-- `controller`: endpoints REST;
-- `dto`: dados de entrada (com Bean Validation) e de saída;
-- `mapper`: converte a entidade para o DTO de saída;
-- `service`: casos de uso e transações: busca no banco, chama o domínio e salva;
-- `repository`: interfaces Spring Data JPA;
-- `entity`: entidades JPA e regras de negócio.
+## Endpoints
 
-`Pedido` é a raiz do agregado. `Pagamento`, `Alteracao`, `MaterialPedido` e `EventoPedido` ficam em `pedido/entity`, no mesmo pacote do `Pedido`, porque só ele pode criá-los e alterá-los. Por isso os módulos `alteracao`, `producao` e `pagamento` não têm `entity`: eles trabalham sobre o `Pedido` e respondem com o mesmo `PedidoResponse`.
+Enquanto não há login, quem faz a operação é informado no cabeçalho `X-Usuario-Id`: 1 = Ana (atendimento), 2 = Beto (produção), 3 = Marcos (dono).
 
-Regras de dependência:
-
-- `controller` usa `service`;
-- `service` usa `repository`, `mapper` e as entidades, inclusive de outros módulos;
-- as entidades não dependem de nenhuma outra camada.
-
-As consultas que cruzam vários pedidos ficam no `service`, pois precisam do banco. É o caso da fila da produção e da lista de compras.
-
-### Endpoints
-
-Nas operações, o id de quem faz vai no cabeçalho `X-Usuario-Id` (1 = Ana, atendimento; 2 = Beto, produção; 3 = Marcos, dono).
-
-| Módulo | Método e caminho | O que faz |
-|---|---|---|
-| cliente | `POST /clientes`, `GET /clientes`, `GET /clientes/{id}` | Cadastra e consulta clientes |
-| pedido | `POST /pedidos`, `GET /pedidos`, `GET /pedidos/{id}` | Registra e consulta pedidos |
-| alteracao | `PUT /pedidos/{id}/personalizacao` | Muda a personalização; fica pendente até a produção ver |
-| alteracao | `POST /pedidos/{id}/ciencia` | A produção confirma que viu a alteração |
-| producao | `GET /producao/fila` | Pedidos ainda não prontos, por data de entrega |
-| producao | `POST /pedidos/{id}/iniciar-producao`, `POST /pedidos/{id}/pronto` | Muda o status |
-| pagamento | `POST /pedidos/{id}/pagamentos` | Registra sinal ou pagamento parcial |
-| pagamento | `POST /pedidos/{id}/entrega` | Entrega; só fecha com o saldo completo recebido |
-| material | `GET /materiais`, `GET /compras` | Materiais e lista do que falta comprar |
-| material | `PUT /pedidos/{id}/materiais/{materialId}/disponivel` | A produção marca o material como separado |
-
-## Tecnologias
-
-### Usadas no projeto
-
-- **Java 21**: linguagem do projeto.
-- **Spring Boot 3.3**: configura a aplicação e o banco automaticamente.
-- **Spring Data JPA com Hibernate**: mapeia as classes Java para tabelas do banco por meio das anotações JPA (`@Entity`, `@ManyToOne` e outras).
-- **H2 em memória**: banco de dados que roda dentro da própria aplicação e some quando ela é desligada. Serve para desenvolver e testar sem instalar nada. O esquema é criado a partir das entidades.
-- **JUnit 5**: biblioteca para escrever e executar testes automáticos.
-- **AssertJ**: biblioteca de verificações que deixa os testes legíveis. Por exemplo, `assertThat(pedido.getSaldo()).isEqualByComparingTo("225.00")`.
-- **Spring Web (REST)**: controllers que expõem os pedidos em JSON.
-- **Bean Validation**: validação dos dados que chegam nos endpoints, antes de chegar ao domínio.
-- **Lombok**: `@RequiredArgsConstructor` gera os construtores dos services e controllers.
-- **Maven**: gerencia as dependências e executa o build e os testes. O Maven Wrapper (`mvnw`) dispensa a instalação.
-
-### Planejadas para a aplicação web (próximas etapas)
-
-- **Spring Security com BCrypt**: login individual, controle por perfil (atendimento, produção e dono) e senhas guardadas como hash.
-- **PostgreSQL**: banco de dados de produção, no lugar do H2.
-- **Front-end web (HTML, CSS e JavaScript)**: telas de pedidos, agenda e compras, seguindo o protótipo da V1. Funciona no celular e no computador, sem instalação.
-
-As tecnologias planejadas ainda serão confirmadas pela equipe e podem mudar.
+| Módulo | Endpoints |
+|---|---|
+| Cliente | `POST /clientes`, `GET /clientes`, `GET /clientes/{id}` |
+| Pedido | `POST /pedidos`, `GET /pedidos`, `GET /pedidos/{id}` |
+| Alteração | `PUT /pedidos/{id}/personalizacao`, `POST /pedidos/{id}/ciencia` |
+| Produção | `GET /producao/fila`, `POST /pedidos/{id}/iniciar-producao`, `POST /pedidos/{id}/pronto` |
+| Pagamento | `POST /pedidos/{id}/pagamentos`, `POST /pedidos/{id}/entrega` |
+| Material | `GET /materiais`, `GET /compras`, `PUT /pedidos/{id}/materiais/{materialId}/disponivel` |
 
 ## Como executar
 
-Pré-requisito: JDK 21 instalado, com `JAVA_HOME` apontando para ele. O Maven não precisa estar instalado, porque o projeto usa o Maven Wrapper.
-
-Rodar os testes:
+Pré-requisito: JDK 21 instalado. O Maven não precisa ser instalado.
 
 ```bash
-./mvnw test
+./mvnw spring-boot:run      # sobe a aplicação em http://localhost:8080
+./mvnw test                 # roda os testes
 ```
 
-No Windows (PowerShell ou CMD):
+No Windows (CMD ou PowerShell), use `mvnw.cmd` no lugar de `./mvnw`.
 
-```bash
-mvnw.cmd test
-```
+Ao subir, a aplicação cria dados de exemplo: os 3 usuários acima, o produto "Kit festa" e a cliente Maria Souza.
 
-Os testes cobrem:
+## Modelo de dados
 
-- `PedidoTest`: regras de negócio, sem banco.
-- `MapeamentoJpaTest`: salva um pedido com todos os relacionamentos no H2 e lê de volta, conferindo o mapeamento JPA.
-- `FluxoPedidoTest`: percorre um pedido pelos 5 módulos, do cadastro até a entrega, chamando os endpoints de verdade.
+O diagrama abaixo representa as entidades do sistema e seus relacionamentos.
 
-Subir a aplicação em `http://localhost:8080`. Os dados de exemplo são criados ao subir (usuários 1 = Ana, atendimento; 2 = Beto, produção; 3 = Marcos, dono). Nas operações, o id de quem faz vai no cabeçalho `X-Usuario-Id`:
-
-```bash
-./mvnw spring-boot:run
-```
+![Diagrama de classes](docs/diagrama-classes.svg)
 
 ## Equipe
 
-<!-- Preencha com os nomes dos integrantes -->
 - Flavio Eugenio
 - Eike Sales
 - Miguel Angelus
 - Gustavo Interamnense
 - Igor Maia
+
+## Status do projeto
+
+Em desenvolvimento.
