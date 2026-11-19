@@ -25,9 +25,9 @@ public class DadosIniciais implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        em.persist(new Usuario("Ana", "ana", "sem-login", Perfil.ATENDIMENTO));
-        em.persist(new Usuario("Beto", "beto", "sem-login", Perfil.PRODUCAO));
-        em.persist(new Usuario("Marcos", "marcos", "sem-login", Perfil.DONO));
+        em.persist(new Usuario("Ana", Perfil.ATENDIMENTO));
+        em.persist(new Usuario("Beto", Perfil.PRODUCAO));
+        em.persist(new Usuario("Marcos", Perfil.DONO));
 
         Material fita = new Material("Fita de cetim");
         Material caixa = new Material("Caixa kraft");

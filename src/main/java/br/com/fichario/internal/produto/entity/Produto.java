@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-/** Item do catalogo. Sua lista padrao de materiais e copiada para cada novo pedido. */
+/** Item do catalogo. Seus materiais padrao sao copiados para cada novo pedido. */
 @Entity
 @Table(name = "produto")
 public class Produto {
@@ -19,9 +19,6 @@ public class Produto {
 
     @Column(nullable = false, unique = true, length = 100)
     private String nome;
-
-    @Column(nullable = false)
-    private boolean ativo = true;
 
     @ManyToMany
     @JoinTable(name = "produto_material",
@@ -36,28 +33,11 @@ public class Produto {
         this.nome = Validacao.texto(nome, "Nome do produto", 100);
     }
 
-    public void renomear(String novoNome) {
-        this.nome = Validacao.texto(novoNome, "Nome do produto", 100);
-    }
-
     public void adicionarMaterialPadrao(Material material) {
         materiaisPadrao.add(Validacao.obrigatorio(material, "Material"));
     }
 
-    public void removerMaterialPadrao(Material material) {
-        materiaisPadrao.remove(material);
-    }
-
-    public void desativar() {
-        this.ativo = false;
-    }
-
-    public void reativar() {
-        this.ativo = true;
-    }
-
     public Long getId() { return id; }
     public String getNome() { return nome; }
-    public boolean isAtivo() { return ativo; }
     public Set<Material> getMateriaisPadrao() { return Collections.unmodifiableSet(materiaisPadrao); }
 }

@@ -3,13 +3,9 @@ package br.com.fichario.internal.pedido.entity;
 import br.com.fichario.internal.material.entity.Material;
 import jakarta.persistence.*;
 
-/**
- * Material necessario para um pedido especifico e sua situacao (disponivel ou falta comprar).
- * Criado e alterado somente pelo {@link Pedido}.
- */
+/** Material de um pedido: disponivel ou falta comprar. Criado e alterado somente pelo Pedido. */
 @Entity
-@Table(name = "material_pedido",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"pedido_id", "material_id"}))
+@Table(name = "material_pedido")
 public class MaterialPedido {
 
     @Id
@@ -24,7 +20,7 @@ public class MaterialPedido {
     @JoinColumn(name = "material_id")
     private Material material;
 
-    /** Comeca falso: o material so conta como disponivel depois de conferido. */
+    /** Comeca falso: so conta como disponivel depois que a producao confere. */
     @Column(nullable = false)
     private boolean disponivel;
 
@@ -40,16 +36,7 @@ public class MaterialPedido {
         this.disponivel = true;
     }
 
-    void marcarEmFalta() {
-        this.disponivel = false;
-    }
-
-    boolean refereA(Material outro) {
-        return material == outro || material.equals(outro);
-    }
-
     public Long getId() { return id; }
-    public Pedido getPedido() { return pedido; }
     public Material getMaterial() { return material; }
     public boolean isDisponivel() { return disponivel; }
 }

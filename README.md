@@ -1,111 +1,223 @@
 # Fichário de Encomendas
 
-Sistema de pedidos para uma pequena empresa de produtos personalizados sob encomenda, desenvolvido com Java e Spring Boot.
+API em Java e Spring Boot para organizar os pedidos de uma pequena empresa de produtos personalizados sob encomenda.
 
-## Sobre o projeto
+## O problema
 
-Hoje os pedidos da empresa chegam por WhatsApp, Instagram e balcão e ficam espalhados em celulares, cadernos e planilhas. Com isso, alterações não chegam à produção, a produção começa sem o material necessário e produtos são entregues sem conferir o pagamento.
+Os pedidos chegam por WhatsApp, Instagram e balcão e ficam anotados em celulares, cadernos e planilhas. Ninguém tem uma visão única do pedido, e isso gera erros que custam dinheiro para a empresa.
 
-O Fichário de Encomendas centraliza cada pedido em um só lugar: dados do cliente, alterações, materiais, pagamentos e andamento da produção.
+## O que o sistema resolve
 
-## Funcionalidades
-
-- Cadastro e consulta de clientes.
-- Registro e consulta de pedidos.
-- Alterações do pedido, que só valem depois que a produção confirma que viu.
-- Fila e andamento da produção.
-- Registro de pagamentos e entrega, que só é feita com o saldo quitado.
-- Controle dos materiais de cada pedido e lista do que falta comprar.
-
-## Tecnologias utilizadas
-
-- Java 21
-- Spring Boot
-- Spring Data JPA
-- Spring Web
-- Bean Validation
-- H2 (banco em memória)
-- Lombok
-- Maven
-
-## Arquitetura
-
-O projeto adota uma **arquitetura monolítica em camadas, organizada por módulo (feature)**. A aplicação roda como um único serviço Spring Boot, e o código de cada área do negócio fica agrupado no seu módulo: clientes, pedidos, alterações, produção, pagamentos e materiais.
-
-### Justificativa
-
-Tudo na empresa gira em torno do pedido: ele pertence a um cliente e recebe alterações, materiais e pagamentos. Manter isso em uma única aplicação garante dados consistentes e simplifica a comunicação entre as partes.
-
-O sistema é um cadastro com regras, usado por uma equipe pequena e com um só banco de dados. O monólito em camadas separa bem as responsabilidades sem o custo de dividir o sistema em vários serviços. A organização por módulo ajuda a equipe, que está aprendendo Spring Boot, a encontrar o código de cada funcionalidade.
-
-As regras de negócio ficam nas entidades, principalmente no `Pedido`. Por exemplo: só entregar com o saldo quitado e só produzir com os materiais disponíveis. Assim as regras valem em qualquer endpoint.
-
-### Organização do código
-
-```text
-br.com.fichario
-├── FicharioApplication.java
-├── config                  # dados de exemplo e tratamento de erros
-├── internal
-│   ├── cliente
-│   │   ├── controller      # endpoints HTTP
-│   │   ├── service         # casos de uso
-│   │   ├── repository      # acesso a dados com Spring Data JPA
-│   │   ├── dto             # dados de entrada e saída da API
-│   │   ├── mapper          # converte entidade em DTO
-│   │   └── entity          # entidades JPA e regras de negócio
-│   ├── pedido
-│   ├── alteracao
-│   ├── producao
-│   ├── pagamento
-│   ├── material
-│   ├── produto
-│   └── usuario
-└── shared                  # exceções e validações usadas por todos
-```
-
-Os módulos menores têm só os pacotes de que precisam. Os controllers recebem as requisições e chamam os services. Os services buscam os dados nos repositories e chamam as regras das entidades. Os DTOs definem o que a API recebe e devolve, sem expor as entidades.
-
-## Endpoints
-
-Enquanto não há login, quem faz a operação é informado no cabeçalho `X-Usuario-Id`: 1 = Ana (atendimento), 2 = Beto (produção), 3 = Marcos (dono).
-
-| Módulo | Endpoints |
+| Situação na empresa | Como o sistema trata |
 |---|---|
-| Cliente | `POST /clientes`, `GET /clientes`, `GET /clientes/{id}` |
-| Pedido | `POST /pedidos`, `GET /pedidos`, `GET /pedidos/{id}` |
-| Alteração | `PUT /pedidos/{id}/personalizacao`, `POST /pedidos/{id}/ciencia` |
-| Produção | `GET /producao/fila`, `POST /pedidos/{id}/iniciar-producao`, `POST /pedidos/{id}/pronto` |
-| Pagamento | `POST /pedidos/{id}/pagamentos`, `POST /pedidos/{id}/entrega` |
-| Material | `GET /materiais`, `GET /compras`, `PUT /pedidos/{id}/materiais/{materialId}/disponivel` |
+| O cliente muda o pedido e a produção não fica sabendo | A alteração fica pendente até a produção confirmar que viu |
+| A produção começa e para por falta de material | A produção só inicia com todos os materiais marcados como disponíveis |
+| Compras feitas sem saber o que realmente falta | Lista de compras com os materiais em falta de cada pedido |
+| Ninguém sabe em que etapa está cada encomenda | Fila da produção com o status de cada pedido |
+| Produto entregue sem conferir o pagamento | O saldo é calculado pelo sistema, e a entrega só fecha com ele quitado |
 
-## Como executar
+## Como rodar
 
-Pré-requisito: JDK 21 instalado. O Maven não precisa ser instalado.
+Precisa apenas do **JDK 21**. O projeto já traz o Maven Wrapper.
 
 ```bash
-./mvnw spring-boot:run      # sobe a aplicação em http://localhost:8080
-./mvnw test                 # roda os testes
+./mvnw spring-boot:run      # API em http://localhost:8080
+./mvnw test                 # testes
 ```
 
-No Windows (CMD ou PowerShell), use `mvnw.cmd` no lugar de `./mvnw`.
+No Windows (CMD ou PowerShell), troque `./mvnw` por `mvnw.cmd`.
 
-Ao subir, a aplicação cria dados de exemplo: os 3 usuários acima, o produto "Kit festa" e a cliente Maria Souza.
+Ao iniciar, a aplicação cria dados de exemplo para testar: os usuários Ana (id 1, atendimento), Beto (id 2, produção) e Marcos (id 3, dono), o produto "Kit festa" e a cliente Maria Souza.
 
-## Modelo de dados
+## Rotas da API
 
-O diagrama abaixo representa as entidades do sistema e seus relacionamentos.
+Como ainda não há login, o id de quem faz a operação vai no cabeçalho `X-Usuario-Id`.
 
-![Diagrama de classes](docs/diagrama-classes.svg)
+**Clientes:** `POST /clientes` · `GET /clientes` · `GET /clientes/{id}`
 
-## Equipe
+**Pedidos:** `POST /pedidos` · `GET /pedidos` · `GET /pedidos/{id}`
 
-- Flavio Eugenio
+**Alterações:** `PUT /pedidos/{id}/personalizacao` · `POST /pedidos/{id}/ciencia`
+
+**Produção:** `GET /producao/fila` · `POST /pedidos/{id}/iniciar-producao` · `POST /pedidos/{id}/pronto`
+
+**Pagamentos:** `POST /pedidos/{id}/pagamentos` · `POST /pedidos/{id}/entrega`
+
+**Materiais:** `GET /materiais` · `GET /compras` · `PUT /pedidos/{id}/materiais/{materialId}/disponivel`
+
+## Arquitetura escolhida
+
+**Monolito em camadas** (controller, service e repository), com o código **separado por módulo**: cada parte do negócio tem a sua pasta.
+
+Por que essa escolha:
+
+- **Pelo negócio:** tudo depende do pedido. Clientes, alterações, materiais e pagamentos estão ligados a ele, então faz sentido ficarem numa só aplicação, com um só banco.
+- **Pela complexidade:** o sistema é um cadastro com regras, para uma empresa de oito pessoas. Dividir em microsserviços traria custo sem benefício.
+- **Pela equipe:** estamos aprendendo Spring Boot, e o padrão em camadas é o mais usado na documentação. Separar por módulo deixa claro onde está o código de cada integrante.
+
+As **regras de negócio ficam nas entidades**, principalmente em `Pedido`. Os services apenas buscam os dados, chamam essas regras e devolvem a resposta.
+
+## Estrutura de pastas
+
+```text
+src/main/java/br/com/fichario
+├── config          dados de exemplo e respostas de erro
+├── shared          exceções e validações comuns
+└── internal        um pacote por módulo
+    ├── cliente     controller · dto · entity · mapper · repository · service
+    ├── pedido      controller · dto · entity · mapper · repository · service
+    ├── alteracao   controller · dto · service
+    ├── producao    controller · service
+    ├── pagamento   controller · dto · service
+    ├── material    controller · dto · entity · mapper · repository · service
+    ├── produto     entity · repository
+    └── usuario     entity · repository
+```
+
+Cada módulo tem só os pacotes de que precisa. Alterações, produção e pagamentos trabalham direto sobre o `Pedido`, por isso não têm entidade própria. `Pagamento`, `Alteracao`, `MaterialPedido` e `EventoPedido` ficam junto do `Pedido`, porque só ele cria e altera essas classes.
+
+## Diagrama de classes
+
+```mermaid
+classDiagram
+direction LR
+
+class Pedido {
+  -Long id
+  -int quantidade
+  -String personalizacao
+  -LocalDate dataEntrega
+  -BigDecimal valorTotal
+  -StatusPedido status
+  -CanalOrigem canal
+  -LocalDateTime criadoEm
+  +Pedido(cliente, produto, quantidade, personalizacao, dataEntrega, valorTotal, canal, criadoPor)
+  +alterarPersonalizacao(String nova, Usuario autor)
+  +confirmarCiencia(Usuario responsavel)
+  +marcarMaterialDisponivel(Material material, Usuario autor)
+  +iniciarProducao(Usuario autor)
+  +marcarPronto(Usuario autor)
+  +registrarPagamento(BigDecimal valor, FormaPagamento forma, Usuario autor)
+  +registrarEntrega(BigDecimal valorRecebido, FormaPagamento forma, String recebidoPor, Usuario autor)
+  +getSaldo() BigDecimal
+}
+
+class Cliente {
+  -Long id
+  -String nome
+  -String telefone
+  +Cliente(String nome, String telefone)
+}
+
+class Produto {
+  -Long id
+  -String nome
+  +Produto(String nome)
+  +adicionarMaterialPadrao(Material material)
+}
+
+class Material {
+  -Long id
+  -String nome
+  +Material(String nome)
+}
+
+class MaterialPedido {
+  -Long id
+  -boolean disponivel
+  ~marcarDisponivel()
+}
+
+class Pagamento {
+  -Long id
+  -BigDecimal valor
+  -FormaPagamento forma
+  -LocalDateTime registradoEm
+  -String recebidoPor
+}
+
+class Alteracao {
+  -Long id
+  -String campo
+  -String valorAnterior
+  -String valorNovo
+  -LocalDateTime alteradoEm
+  -LocalDateTime cienciaEm
+  ~registrarCiencia(Usuario responsavel)
+  +isPendente() boolean
+}
+
+class EventoPedido {
+  -Long id
+  -String descricao
+  -LocalDateTime ocorridoEm
+}
+
+class Usuario {
+  -Long id
+  -String nome
+  -Perfil perfil
+  +Usuario(String nome, Perfil perfil)
+  +exigirPerfil(Perfil... permitidos)
+}
+
+class StatusPedido {
+  <<enumeration>>
+  RECEBIDO
+  EM_PRODUCAO
+  PRONTO
+  ENTREGUE
+}
+
+class CanalOrigem {
+  <<enumeration>>
+  WHATSAPP
+  INSTAGRAM
+  PRESENCIAL
+}
+
+class FormaPagamento {
+  <<enumeration>>
+  PIX
+  DINHEIRO
+  CARTAO
+  TRANSFERENCIA
+}
+
+class Perfil {
+  <<enumeration>>
+  ATENDIMENTO
+  PRODUCAO
+  DONO
+}
+
+Pedido "0..*" --> "1" Cliente : cliente
+Pedido "0..*" --> "1" Produto : produto
+Pedido "0..*" --> "1" Usuario : criadoPor
+Pedido "1" *-- "0..*" MaterialPedido : materiais
+Pedido "1" *-- "0..*" Pagamento : pagamentos
+Pedido "1" *-- "0..*" Alteracao : alteracoes
+Pedido "1" *-- "1..*" EventoPedido : historico
+MaterialPedido "0..*" --> "1" Material : material
+Produto "0..*" --> "0..*" Material : materiaisPadrao
+Pagamento "0..*" --> "1" Usuario : registradoPor
+Alteracao "0..*" --> "1" Usuario : alteradoPor
+Alteracao "0..*" --> "0..1" Usuario : cienciaPor
+EventoPedido "0..*" --> "1" Usuario : autor
+Pedido ..> StatusPedido
+Pedido ..> CanalOrigem
+Pagamento ..> FormaPagamento
+Usuario ..> Perfil
+```
+
+O GitHub desenha o diagrama a partir deste código. A mesma fonte está em `docs/diagrama-classes.mmd`.
+
+## Integrantes
+
 - Eike Sales
-- Miguel Angelus
+- Flavio Eugenio
 - Gustavo Interamnense
 - Igor Maia
+- Miguel Angelus
 
-## Status do projeto
-
-Em desenvolvimento.
+**Tecnologias:** Java 21 · Spring Boot · Spring Web · Spring Data JPA · Bean Validation · H2 · Lombok · Maven
