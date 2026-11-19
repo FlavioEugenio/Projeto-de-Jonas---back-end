@@ -1,62 +1,36 @@
 package br.com.fichario.internal.producao.controller;
 
-import br.com.fichario.internal.pedido.dto.PedidoDetalheResponse;
-import br.com.fichario.internal.producao.dto.CancelamentoRequest;
-import br.com.fichario.internal.producao.dto.FilaProducaoItem;
+import br.com.fichario.internal.pedido.dto.PedidoResponse;
 import br.com.fichario.internal.producao.service.ProducaoService;
-import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Status do pedido na producao. Quem faz a operacao vai no cabecalho X-Usuario-Id. */
 @RestController
+@RequiredArgsConstructor
 public class ProducaoController {
 
-    private final ProducaoService service;
-
-    public ProducaoController(ProducaoService service) {
-        this.service = service;
-    }
+    private final ProducaoService producaoService;
 
     @GetMapping("/producao/fila")
-    public List<FilaProducaoItem> listarFila() {
-        return service.listarFila();
+    public List<PedidoResponse> listarFila() {
+        return producaoService.listarFila();
     }
 
     @PostMapping("/pedidos/{id}/iniciar-producao")
-    public PedidoDetalheResponse iniciarProducao(@PathVariable Long id,
-                                                 @RequestHeader("X-Usuario-Id") Long usuarioId) {
-        return service.iniciarProducao(id, usuarioId);
-    }
-
-    @PostMapping("/pedidos/{id}/aguardar-material")
-    public PedidoDetalheResponse aguardarMaterial(@PathVariable Long id,
-                                                  @RequestHeader("X-Usuario-Id") Long usuarioId) {
-        return service.aguardarMaterial(id, usuarioId);
+    public PedidoResponse iniciarProducao(@PathVariable Long id,
+                                          @RequestHeader("X-Usuario-Id") Long usuarioId) {
+        return producaoService.iniciarProducao(id, usuarioId);
     }
 
     @PostMapping("/pedidos/{id}/pronto")
-    public PedidoDetalheResponse marcarPronto(@PathVariable Long id,
-                                              @RequestHeader("X-Usuario-Id") Long usuarioId) {
-        return service.marcarPronto(id, usuarioId);
-    }
-
-    @PostMapping("/pedidos/{id}/voltar-producao")
-    public PedidoDetalheResponse voltarParaProducao(@PathVariable Long id,
-                                                    @RequestHeader("X-Usuario-Id") Long usuarioId) {
-        return service.voltarParaProducao(id, usuarioId);
-    }
-
-    @PostMapping("/pedidos/{id}/cancelamento")
-    public PedidoDetalheResponse cancelar(@PathVariable Long id,
-                                          @RequestHeader("X-Usuario-Id") Long usuarioId,
-                                          @RequestBody @Valid CancelamentoRequest dados) {
-        return service.cancelar(id, dados.motivo(), usuarioId);
+    public PedidoResponse marcarPronto(@PathVariable Long id,
+                                       @RequestHeader("X-Usuario-Id") Long usuarioId) {
+        return producaoService.marcarPronto(id, usuarioId);
     }
 }

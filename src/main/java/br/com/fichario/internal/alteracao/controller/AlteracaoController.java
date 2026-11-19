@@ -1,80 +1,36 @@
 package br.com.fichario.internal.alteracao.controller;
 
-import br.com.fichario.internal.alteracao.dto.AlteracaoResponse;
-import br.com.fichario.internal.alteracao.dto.AlterarDataEntregaRequest;
-import br.com.fichario.internal.alteracao.dto.AlterarQuantidadeRequest;
-import br.com.fichario.internal.alteracao.dto.AlterarTextoRequest;
+import br.com.fichario.internal.alteracao.dto.AlterarPersonalizacaoRequest;
 import br.com.fichario.internal.alteracao.service.AlteracaoService;
-import br.com.fichario.internal.pedido.dto.PedidoDetalheResponse;
-import br.com.fichario.internal.pedido.dto.PedidoResumoResponse;
+import br.com.fichario.internal.pedido.dto.PedidoResponse;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.GetMapping;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
-/** Alteracoes do pedido e ciencia da producao. Quem faz a operacao vai no cabecalho X-Usuario-Id. */
 @RestController
+@RequestMapping("/pedidos/{id}")
+@RequiredArgsConstructor
 public class AlteracaoController {
 
-    private final AlteracaoService service;
+    private final AlteracaoService alteracaoService;
 
-    public AlteracaoController(AlteracaoService service) {
-        this.service = service;
+    @PutMapping("/personalizacao")
+    public PedidoResponse alterarPersonalizacao(@PathVariable Long id,
+                                                @RequestHeader("X-Usuario-Id") Long usuarioId,
+                                                @RequestBody @Valid AlterarPersonalizacaoRequest request) {
+        return alteracaoService.alterarPersonalizacao(id, request.personalizacao(), usuarioId);
     }
 
-    @PutMapping("/pedidos/{id}/personalizacao")
-    public PedidoDetalheResponse alterarPersonalizacao(@PathVariable Long id,
-                                                       @RequestHeader("X-Usuario-Id") Long usuarioId,
-                                                       @RequestBody @Valid AlterarTextoRequest dados) {
-        return service.alterarPersonalizacao(id, dados.valor(), usuarioId);
-    }
-
-    @PutMapping("/pedidos/{id}/quantidade")
-    public PedidoDetalheResponse alterarQuantidade(@PathVariable Long id,
-                                                   @RequestHeader("X-Usuario-Id") Long usuarioId,
-                                                   @RequestBody @Valid AlterarQuantidadeRequest dados) {
-        return service.alterarQuantidade(id, dados.quantidade(), usuarioId);
-    }
-
-    @PutMapping("/pedidos/{id}/data-entrega")
-    public PedidoDetalheResponse alterarDataEntrega(@PathVariable Long id,
-                                                    @RequestHeader("X-Usuario-Id") Long usuarioId,
-                                                    @RequestBody @Valid AlterarDataEntregaRequest dados) {
-        return service.alterarDataEntrega(id, dados.dataEntrega(), usuarioId);
-    }
-
-    @PutMapping("/pedidos/{id}/observacoes")
-    public PedidoDetalheResponse alterarObservacoes(@PathVariable Long id,
-                                                    @RequestHeader("X-Usuario-Id") Long usuarioId,
-                                                    @RequestBody @Valid AlterarTextoRequest dados) {
-        return service.alterarObservacoes(id, dados.valor(), usuarioId);
-    }
-
-    @PostMapping("/pedidos/{id}/confirmacao-cliente")
-    public PedidoDetalheResponse confirmarPeloCliente(@PathVariable Long id,
-                                                      @RequestHeader("X-Usuario-Id") Long usuarioId) {
-        return service.confirmarPeloCliente(id, usuarioId);
-    }
-
-    @PostMapping("/pedidos/{id}/ciencia")
-    public PedidoDetalheResponse confirmarCiencia(@PathVariable Long id,
-                                                  @RequestHeader("X-Usuario-Id") Long usuarioId) {
-        return service.confirmarCiencia(id, usuarioId);
-    }
-
-    @GetMapping("/pedidos/{id}/alteracoes")
-    public List<AlteracaoResponse> listarDoPedido(@PathVariable Long id) {
-        return service.listarDoPedido(id);
-    }
-
-    @GetMapping("/alteracoes/pendentes")
-    public List<PedidoResumoResponse> listarPedidosComPendencia() {
-        return service.listarPedidosComPendencia();
+    /** Somente a producao confirma que viu as alteracoes. */
+    @PostMapping("/ciencia")
+    public PedidoResponse confirmarCiencia(@PathVariable Long id,
+                                           @RequestHeader("X-Usuario-Id") Long usuarioId) {
+        return alteracaoService.confirmarCiencia(id, usuarioId);
     }
 }

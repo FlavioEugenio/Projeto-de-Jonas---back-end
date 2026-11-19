@@ -79,9 +79,9 @@ src/main/java/br/com/fichario
 ├── internal                        um pacote por módulo do negócio
 │   ├── cliente                     controller, dto, entity, mapper, repository, service
 │   ├── pedido                      controller, dto, entity, mapper, repository, service
-│   ├── alteracao                   controller, dto, mapper, repository, service
-│   ├── producao                    controller, dto, mapper, service
-│   ├── pagamento                   controller, dto, mapper, service
+│   ├── alteracao                   controller, dto, service
+│   ├── producao                    controller, service
+│   ├── pagamento                   controller, dto, service
 │   ├── material                    controller, dto, entity, mapper, repository, service
 │   ├── produto                     entity, repository
 │   ├── usuario                     entity, repository
@@ -100,7 +100,7 @@ Dentro de cada módulo:
 - `repository`: interfaces Spring Data JPA;
 - `entity`: entidades JPA e regras de negócio.
 
-`Pedido` é a raiz do agregado. `Pagamento`, `Alteracao`, `MaterialPedido` e `EventoPedido` ficam em `pedido/entity`, no mesmo pacote do `Pedido`, porque só ele pode criá-los e alterá-los. Por isso os módulos `alteracao` e `pagamento` não têm `entity`: eles trabalham sobre o `Pedido`.
+`Pedido` é a raiz do agregado. `Pagamento`, `Alteracao`, `MaterialPedido` e `EventoPedido` ficam em `pedido/entity`, no mesmo pacote do `Pedido`, porque só ele pode criá-los e alterá-los. Por isso os módulos `alteracao`, `producao` e `pagamento` não têm `entity`: eles trabalham sobre o `Pedido` e respondem com o mesmo `PedidoResponse`.
 
 Regras de dependência:
 
@@ -109,6 +109,23 @@ Regras de dependência:
 - as entidades não dependem de nenhuma outra camada.
 
 As consultas que cruzam vários pedidos ficam no `service`, pois precisam do banco. É o caso da fila da produção e da lista de compras.
+
+### Endpoints
+
+Nas operações, o id de quem faz vai no cabeçalho `X-Usuario-Id` (1 = Ana, atendimento; 2 = Beto, produção; 3 = Marcos, dono).
+
+| Módulo | Método e caminho | O que faz |
+|---|---|---|
+| cliente | `POST /clientes`, `GET /clientes`, `GET /clientes/{id}` | Cadastra e consulta clientes |
+| pedido | `POST /pedidos`, `GET /pedidos`, `GET /pedidos/{id}` | Registra e consulta pedidos |
+| alteracao | `PUT /pedidos/{id}/personalizacao` | Muda a personalização; fica pendente até a produção ver |
+| alteracao | `POST /pedidos/{id}/ciencia` | A produção confirma que viu a alteração |
+| producao | `GET /producao/fila` | Pedidos ainda não prontos, por data de entrega |
+| producao | `POST /pedidos/{id}/iniciar-producao`, `POST /pedidos/{id}/pronto` | Muda o status |
+| pagamento | `POST /pedidos/{id}/pagamentos` | Registra sinal ou pagamento parcial |
+| pagamento | `POST /pedidos/{id}/entrega` | Entrega; só fecha com o saldo completo recebido |
+| material | `GET /materiais`, `GET /compras` | Materiais e lista do que falta comprar |
+| material | `PUT /pedidos/{id}/materiais/{materialId}/disponivel` | A produção marca o material como separado |
 
 ## Tecnologias
 
@@ -122,6 +139,7 @@ As consultas que cruzam vários pedidos ficam no `service`, pois precisam do ban
 - **AssertJ**: biblioteca de verificações que deixa os testes legíveis. Por exemplo, `assertThat(pedido.getSaldo()).isEqualByComparingTo("225.00")`.
 - **Spring Web (REST)**: controllers que expõem os pedidos em JSON.
 - **Bean Validation**: validação dos dados que chegam nos endpoints, antes de chegar ao domínio.
+- **Lombok**: `@RequiredArgsConstructor` gera os construtores dos services e controllers.
 - **Maven**: gerencia as dependências e executa o build e os testes. O Maven Wrapper (`mvnw`) dispensa a instalação.
 
 ### Planejadas para a aplicação web (próximas etapas)
@@ -152,7 +170,7 @@ Os testes cobrem:
 
 - `PedidoTest`: regras de negócio, sem banco.
 - `MapeamentoJpaTest`: salva um pedido com todos os relacionamentos no H2 e lê de volta, conferindo o mapeamento JPA.
-- Um teste por módulo (`CadastroPedidosTest`, `AlteracoesPedidoTest`, `StatusProducaoTest`, `ControlePagamentosTest` e `MateriaisComprasTest`): chamam os endpoints de verdade, com o H2 e os dados iniciais.
+- `FluxoPedidoTest`: percorre um pedido pelos 5 módulos, do cadastro até a entrega, chamando os endpoints de verdade.
 
 Subir a aplicação em `http://localhost:8080`. Os dados de exemplo são criados ao subir (usuários 1 = Ana, atendimento; 2 = Beto, produção; 3 = Marcos, dono). Nas operações, o id de quem faz vai no cabeçalho `X-Usuario-Id`:
 

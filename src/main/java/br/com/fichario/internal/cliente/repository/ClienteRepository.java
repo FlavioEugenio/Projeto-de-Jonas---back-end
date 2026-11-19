@@ -10,8 +10,4 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     boolean existsByTelefone(String telefone);
 
     List<Cliente> findAllByOrderByNomeAsc();
-
-    List<Cliente> findByNomeContainingIgnoreCaseOrderByNomeAsc(String nome);
-
-    List<Cliente> findByTelefoneContainingOrderByNomeAsc(String digitos);
 }

@@ -1,97 +1,36 @@
 package br.com.fichario.internal.pagamento.service;
 
-import br.com.fichario.internal.pagamento.dto.CorrecaoPagamentoRequest;
 import br.com.fichario.internal.pagamento.dto.EntregaRequest;
-import br.com.fichario.internal.pagamento.dto.ExtratoPagamentosResponse;
 import br.com.fichario.internal.pagamento.dto.PagamentoRequest;
-import br.com.fichario.internal.pagamento.mapper.PagamentoMapper;
-import br.com.fichario.internal.pedido.entity.Pagamento;
+import br.com.fichario.internal.pedido.dto.PedidoResponse;
 import br.com.fichario.internal.pedido.entity.Pedido;
-import br.com.fichario.internal.pedido.entity.StatusPedido;
-import br.com.fichario.internal.pedido.repository.PedidoRepository;
+import br.com.fichario.internal.pedido.mapper.PedidoMapper;
+import br.com.fichario.internal.pedido.service.PedidoService;
 import br.com.fichario.internal.usuario.entity.Usuario;
-import br.com.fichario.internal.usuario.repository.UsuarioRepository;
-import br.com.fichario.shared.exception.RecursoNaoEncontradoException;
-import org.springframework.data.domain.Sort;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.function.BiConsumer;
-
-/**
- * Pagamentos (sinal, parcial e saldo na entrega) e fechamento do pedido.
- * O dominio garante que a entrega so fecha com o saldo completo recebido.
- */
+/** Pagamentos e entrega. O Pedido calcula o saldo e so deixa entregar com ele quitado. */
 @Service
+@RequiredArgsConstructor
 public class PagamentoService {
 
-    private final PedidoRepository pedidos;
-    private final UsuarioRepository usuarios;
+    private final PedidoService pedidoService;
 
-    public PagamentoService(PedidoRepository pedidos, UsuarioRepository usuarios) {
-        this.pedidos = pedidos;
-        this.usuarios = usuarios;
+    @Transactional
+    public PedidoResponse registrarPagamento(Long pedidoId, PagamentoRequest request, Long usuarioId) {
+        Usuario usuario = pedidoService.buscarUsuario(usuarioId);
+        Pedido pedido = pedidoService.buscarPedido(pedidoId);
+        pedido.registrarPagamento(request.valor(), request.forma(), usuario);
+        return PedidoMapper.paraResposta(pedido);
     }
 
     @Transactional
-    public ExtratoPagamentosResponse registrar(Long pedidoId, PagamentoRequest dados, Long usuarioId) {
-        return executar(pedidoId, usuarioId,
-                (pedido, autor) -> pedido.registrarPagamento(dados.valor(), dados.forma(), autor));
-    }
-
-    /** Somente o dono corrige. O valor original e o motivo ficam guardados. */
-    @Transactional
-    public ExtratoPagamentosResponse corrigir(Long pedidoId, Long pagamentoId, CorrecaoPagamentoRequest dados,
-                                              Long usuarioId) {
-        return executar(pedidoId, usuarioId, (pedido, autor) -> {
-            Pagamento pagamento = pedido.getPagamentos().stream()
-                    .filter(p -> p.getId().equals(pagamentoId))
-                    .findFirst()
-                    .orElseThrow(() -> new RecursoNaoEncontradoException("Pagamento", pagamentoId));
-            pedido.corrigirPagamento(pagamento, dados.valor(), dados.motivo(), autor);
-        });
-    }
-
-    @Transactional
-    public ExtratoPagamentosResponse alterarValorTotal(Long pedidoId, BigDecimal valorTotal, Long usuarioId) {
-        return executar(pedidoId, usuarioId, (pedido, autor) -> pedido.alterarValorTotal(valorTotal, autor));
-    }
-
-    /** Fecha o pedido. Com saldo em aberto, exige o valor completo e o nome de quem recebeu. */
-    @Transactional
-    public ExtratoPagamentosResponse registrarEntrega(Long pedidoId, EntregaRequest dados, Long usuarioId) {
-        EntregaRequest entrega = dados == null ? new EntregaRequest(null, null, null) : dados;
-        return executar(pedidoId, usuarioId, (pedido, autor) -> pedido.registrarEntrega(
-                entrega.valorRecebido(), entrega.forma(), entrega.recebidoPor(), autor));
-    }
-
-    @Transactional(readOnly = true)
-    public ExtratoPagamentosResponse consultar(Long pedidoId) {
-        return PagamentoMapper.paraExtrato(buscarPedido(pedidoId));
-    }
-
-    /** Pedidos ainda nao entregues com dinheiro a receber, pela data de entrega. */
-    @Transactional(readOnly = true)
-    public List<ExtratoPagamentosResponse> listarAReceber() {
-        return pedidos.findAll((raiz, consulta, cb) -> cb.not(raiz.get("status")
-                                .in(List.of(StatusPedido.ENTREGUE, StatusPedido.CANCELADO))),
-                        Sort.by("dataEntrega", "id")).stream()
-                .filter(p -> p.getSaldo().signum() > 0)
-                .map(PagamentoMapper::paraExtrato)
-                .toList();
-    }
-
-    private ExtratoPagamentosResponse executar(Long pedidoId, Long usuarioId, BiConsumer<Pedido, Usuario> acao) {
-        Usuario autor = usuarios.findById(usuarioId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuario", usuarioId));
-        Pedido pedido = buscarPedido(pedidoId);
-        acao.accept(pedido, autor);
-        return PagamentoMapper.paraExtrato(pedidos.saveAndFlush(pedido));
-    }
-
-    private Pedido buscarPedido(Long id) {
-        return pedidos.findById(id).orElseThrow(() -> new RecursoNaoEncontradoException("Pedido", id));
+    public PedidoResponse registrarEntrega(Long pedidoId, EntregaRequest request, Long usuarioId) {
+        Usuario usuario = pedidoService.buscarUsuario(usuarioId);
+        Pedido pedido = pedidoService.buscarPedido(pedidoId);
+        pedido.registrarEntrega(request.valorRecebido(), request.forma(), request.recebidoPor(), usuario);
+        return PedidoMapper.paraResposta(pedido);
     }
 }

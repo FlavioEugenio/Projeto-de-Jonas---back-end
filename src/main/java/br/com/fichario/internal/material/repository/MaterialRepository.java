@@ -7,7 +7,5 @@ import java.util.List;
 
 public interface MaterialRepository extends JpaRepository<Material, Long> {
 
-    boolean existsByNomeIgnoreCase(String nome);
-
     List<Material> findAllByOrderByNomeAsc();
 }
