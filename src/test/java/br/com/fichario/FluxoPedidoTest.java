@@ -17,10 +17,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * Percorre o caminho do pedido pelos 5 modulos, chamando os endpoints de verdade.
- * Usa os dados iniciais: 1 = Ana (atendimento), 2 = Beto (producao), produto 1 com materiais 1 e 2.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 class FluxoPedidoTest {
@@ -36,25 +32,21 @@ class FluxoPedidoTest {
         long cliente = criarCliente("(85) 98888-0001");
         long pedido = criarPedido(cliente);
 
-        // alteracao: fica pendente e trava a producao ate a ciencia
         enviar(put("/pedidos/{id}/personalizacao", pedido), ANA, "{\"personalizacao\": \"Tema jardim, fita rosa\"}")
                 .andExpect(jsonPath("$.alteracoesPendentes").value(true));
         enviar(post("/pedidos/{id}/ciencia", pedido), BETO, null)
                 .andExpect(jsonPath("$.alteracoesPendentes").value(false));
 
-        // materiais: sem material, a producao nao comeca
         enviar(post("/pedidos/{id}/iniciar-producao", pedido), BETO, null)
                 .andExpect(status().isUnprocessableEntity());
         enviar(put("/pedidos/{id}/materiais/1/disponivel", pedido), BETO, null).andExpect(status().isOk());
         enviar(put("/pedidos/{id}/materiais/2/disponivel", pedido), BETO, null).andExpect(status().isOk());
 
-        // producao
         enviar(post("/pedidos/{id}/iniciar-producao", pedido), BETO, null)
                 .andExpect(jsonPath("$.status").value("EM_PRODUCAO"));
         enviar(post("/pedidos/{id}/pronto", pedido), BETO, null)
                 .andExpect(jsonPath("$.status").value("PRONTO"));
 
-        // pagamento: sinal de 100, e a entrega so fecha com o saldo de 250
         enviar(post("/pedidos/{id}/pagamentos", pedido), ANA, "{\"valor\": 100.00, \"forma\": \"PIX\"}")
                 .andExpect(jsonPath("$.saldo").value(250.0));
         enviar(post("/pedidos/{id}/entrega", pedido), ANA,

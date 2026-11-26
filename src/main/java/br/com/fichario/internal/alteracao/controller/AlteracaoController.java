@@ -27,7 +27,6 @@ public class AlteracaoController {
         return alteracaoService.alterarPersonalizacao(id, request.personalizacao(), usuarioId);
     }
 
-    /** Somente a producao confirma que viu as alteracoes. */
     @PostMapping("/ciencia")
     public PedidoResponse confirmarCiencia(@PathVariable Long id,
                                            @RequestHeader("X-Usuario-Id") Long usuarioId) {

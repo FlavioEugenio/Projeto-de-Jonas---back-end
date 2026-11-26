@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-/** Item do catalogo. Seus materiais padrao sao copiados para cada novo pedido. */
 @Entity
 @Table(name = "produto")
 public class Produto {
@@ -37,7 +36,6 @@ public class Produto {
         materiaisPadrao.add(Validacao.obrigatorio(material, "Material"));
     }
 
-    public Long getId() { return id; }
     public String getNome() { return nome; }
     public Set<Material> getMateriaisPadrao() { return Collections.unmodifiableSet(materiaisPadrao); }
 }

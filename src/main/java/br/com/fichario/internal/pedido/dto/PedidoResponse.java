@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-/** Situacao do pedido. E a resposta de todos os endpoints que mexem num pedido. */
 public record PedidoResponse(
         Long id,
         String cliente,

@@ -144,7 +144,7 @@ class Alteracao {
   -LocalDateTime alteradoEm
   -LocalDateTime cienciaEm
   ~registrarCiencia(Usuario responsavel)
-  +isPendente() boolean
+  ~isPendente() boolean
 }
 
 class EventoPedido {

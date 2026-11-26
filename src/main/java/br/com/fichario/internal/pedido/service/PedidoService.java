@@ -18,10 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Cadastro e consulta de pedidos. As regras (perfil, quantidade, data...) ficam na entidade Pedido.
- * Os metodos buscarPedido e buscarUsuario sao usados tambem pelos outros modulos.
- */
 @Service
 @RequiredArgsConstructor
 public class PedidoService {

@@ -4,7 +4,6 @@ import br.com.fichario.shared.exception.RegraDeNegocioException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-/** Validacoes de entrada compartilhadas pelas entidades do dominio. */
 public final class Validacao {
 
     private Validacao() {
@@ -24,7 +23,7 @@ public final class Validacao {
         return textoOpcional(valor, campo, tamanhoMaximo);
     }
 
-    public static String textoOpcional(String valor, String campo, int tamanhoMaximo) {
+    private static String textoOpcional(String valor, String campo, int tamanhoMaximo) {
         if (valor == null || valor.isBlank()) {
             return null;
         }
@@ -35,7 +34,6 @@ public final class Validacao {
         return limpo;
     }
 
-    /** Valor em reais com no maximo duas casas decimais. */
     public static BigDecimal dinheiro(BigDecimal valor, String campo) {
         obrigatorio(valor, campo);
         if (valor.stripTrailingZeros().scale() > 2) {

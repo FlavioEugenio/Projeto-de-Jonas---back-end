@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** Andamento do pedido na producao. As regras de quando pode mudar de status ficam no Pedido. */
 @Service
 @RequiredArgsConstructor
 public class ProducaoService {
@@ -21,7 +20,6 @@ public class ProducaoService {
     private final PedidoService pedidoService;
     private final PedidoRepository pedidoRepository;
 
-    /** Pedidos que ainda nao estao prontos, do mais urgente para o menos urgente. */
     @Transactional(readOnly = true)
     public List<PedidoResponse> listarFila() {
         List<StatusPedido> naProducao = List.of(StatusPedido.RECEBIDO, StatusPedido.EM_PRODUCAO);
@@ -30,7 +28,6 @@ public class ProducaoService {
                 .toList();
     }
 
-    /** So inicia sem alteracao pendente e com todos os materiais disponiveis. */
     @Transactional
     public PedidoResponse iniciarProducao(Long pedidoId, Long usuarioId) {
         Usuario usuario = pedidoService.buscarUsuario(usuarioId);

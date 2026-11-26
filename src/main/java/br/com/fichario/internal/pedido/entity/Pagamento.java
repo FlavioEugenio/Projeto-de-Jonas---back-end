@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/** Valor recebido de um pedido: sinal, parcial ou saldo na entrega. Criado somente pelo Pedido. */
 @Entity
 @Table(name = "pagamento")
 public class Pagamento {
@@ -33,7 +32,6 @@ public class Pagamento {
     @JoinColumn(name = "registrado_por_id")
     private Usuario registradoPor;
 
-    /** Nome de quem recebeu o dinheiro na entrega, quando houver. */
     @Column(name = "recebido_por", length = 100)
     private String recebidoPor;
 
@@ -49,10 +47,5 @@ public class Pagamento {
         this.registradoEm = LocalDateTime.now();
     }
 
-    public Long getId() { return id; }
-    public BigDecimal getValor() { return valor; }
-    public FormaPagamento getForma() { return forma; }
-    public LocalDateTime getRegistradoEm() { return registradoEm; }
-    public Usuario getRegistradoPor() { return registradoPor; }
-    public String getRecebidoPor() { return recebidoPor; }
+    BigDecimal getValor() { return valor; }
 }

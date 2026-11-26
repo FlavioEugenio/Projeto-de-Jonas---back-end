@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Pagamentos e entrega. O Pedido calcula o saldo e so deixa entregar com ele quitado. */
 @Service
 @RequiredArgsConstructor
 public class PagamentoService {

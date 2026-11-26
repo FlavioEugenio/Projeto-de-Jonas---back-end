@@ -3,7 +3,6 @@ package br.com.fichario.internal.pedido.entity;
 import br.com.fichario.internal.material.entity.Material;
 import jakarta.persistence.*;
 
-/** Material de um pedido: disponivel ou falta comprar. Criado e alterado somente pelo Pedido. */
 @Entity
 @Table(name = "material_pedido")
 public class MaterialPedido {
@@ -20,7 +19,6 @@ public class MaterialPedido {
     @JoinColumn(name = "material_id")
     private Material material;
 
-    /** Comeca falso: so conta como disponivel depois que a producao confere. */
     @Column(nullable = false)
     private boolean disponivel;
 
@@ -36,7 +34,6 @@ public class MaterialPedido {
         this.disponivel = true;
     }
 
-    public Long getId() { return id; }
     public Material getMaterial() { return material; }
     public boolean isDisponivel() { return disponivel; }
 }
