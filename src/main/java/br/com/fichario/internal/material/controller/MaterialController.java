@@ -29,7 +29,6 @@ public class MaterialController {
         return materialService.listarCompras();
     }
 
-    /** A producao confirma que o material ja esta separado para o pedido. */
     @PutMapping("/pedidos/{id}/materiais/{materialId}/disponivel")
     public PedidoResponse marcarDisponivel(@PathVariable Long id, @PathVariable Long materialId,
                                            @RequestHeader("X-Usuario-Id") Long usuarioId) {

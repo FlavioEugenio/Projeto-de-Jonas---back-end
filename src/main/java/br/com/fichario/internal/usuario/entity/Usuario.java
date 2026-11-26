@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 
 import java.util.List;
 
-/** Funcionario da empresa. O perfil define o que ele pode fazer. */
 @Entity
 @Table(name = "usuario")
 public class Usuario {
@@ -30,14 +29,9 @@ public class Usuario {
         this.perfil = Validacao.obrigatorio(perfil, "Perfil");
     }
 
-    /** Barra a operacao se o perfil do usuario nao estiver entre os permitidos. */
     public void exigirPerfil(Perfil... permitidos) {
         if (!List.of(permitidos).contains(perfil)) {
             throw new RegraDeNegocioException("O perfil " + perfil + " nao pode realizar esta operacao.");
         }
     }
-
-    public Long getId() { return id; }
-    public String getNome() { return nome; }
-    public Perfil getPerfil() { return perfil; }
 }

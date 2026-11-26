@@ -11,11 +11,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Cria dados de exemplo ao subir a aplicacao.
- * Usuarios: 1 = Ana (atendimento), 2 = Beto (producao), 3 = Marcos (dono).
- * Produto 1 = Kit festa, que usa os materiais 1 (Fita de cetim) e 2 (Caixa kraft).
- */
 @Component
 @RequiredArgsConstructor
 public class DadosIniciais implements CommandLineRunner {

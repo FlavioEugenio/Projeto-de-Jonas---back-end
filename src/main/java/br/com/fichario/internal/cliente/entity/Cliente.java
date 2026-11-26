@@ -4,7 +4,6 @@ import br.com.fichario.shared.exception.RegraDeNegocioException;
 import br.com.fichario.shared.util.Validacao;
 import jakarta.persistence.*;
 
-/** Quem faz encomendas. Identificado pelo telefone do WhatsApp, que e unico. */
 @Entity
 @Table(name = "cliente")
 public class Cliente {
@@ -16,7 +15,6 @@ public class Cliente {
     @Column(nullable = false, length = 100)
     private String nome;
 
-    /** Somente digitos, com DDD. */
     @Column(nullable = false, unique = true, length = 11)
     private String telefone;
 

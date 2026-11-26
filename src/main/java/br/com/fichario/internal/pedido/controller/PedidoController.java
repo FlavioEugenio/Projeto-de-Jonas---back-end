@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Enquanto nao existe login, quem faz a operacao vai no cabecalho X-Usuario-Id. */
 @RestController
 @RequestMapping("/pedidos")
 @RequiredArgsConstructor

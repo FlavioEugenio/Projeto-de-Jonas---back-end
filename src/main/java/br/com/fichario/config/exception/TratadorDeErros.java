@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 
-/** Transforma as excecoes em respostas JSON com mensagem em portugues. */
 @RestControllerAdvice
 public class TratadorDeErros {
 

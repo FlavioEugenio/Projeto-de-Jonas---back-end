@@ -3,7 +3,6 @@ package br.com.fichario.internal.material.entity;
 import br.com.fichario.shared.util.Validacao;
 import jakarta.persistence.*;
 
-/** Insumo usado na producao, como fita ou caixa. */
 @Entity
 @Table(name = "material")
 public class Material {
@@ -25,7 +24,6 @@ public class Material {
     public Long getId() { return id; }
     public String getNome() { return nome; }
 
-    /** Igual pelo id depois de salvo; antes disso, so a propria instancia. */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

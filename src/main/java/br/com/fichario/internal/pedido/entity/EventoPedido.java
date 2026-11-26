@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-/** Linha do historico do pedido. Imutavel: o historico nunca e apagado. */
 @Entity
 @Table(name = "evento_pedido")
 public class EventoPedido {
@@ -37,10 +36,4 @@ public class EventoPedido {
         this.autor = autor;
         this.ocorridoEm = LocalDateTime.now();
     }
-
-    public Long getId() { return id; }
-    public Pedido getPedido() { return pedido; }
-    public String getDescricao() { return descricao; }
-    public Usuario getAutor() { return autor; }
-    public LocalDateTime getOcorridoEm() { return ocorridoEm; }
 }

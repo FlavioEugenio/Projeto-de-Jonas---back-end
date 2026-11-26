@@ -15,7 +15,6 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Salva um pedido com todos os relacionamentos no banco e le de volta. */
 @DataJpaTest
 class MapeamentoJpaTest {
 
@@ -51,7 +50,7 @@ class MapeamentoJpaTest {
         assertThat(lido.getMateriais()).singleElement().matches(MaterialPedido::isDisponivel);
         assertThat(lido.getSaldo()).isEqualByComparingTo("225.00");
         assertThat(lido.getAlteracoes()).singleElement().matches(a -> !a.isPendente());
-        // criado, pagamento, alteracao, ciencia e material disponivel
+
         assertThat(lido.getHistorico()).hasSize(5);
     }
 }

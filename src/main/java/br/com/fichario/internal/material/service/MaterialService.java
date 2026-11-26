@@ -19,10 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/**
- * Cada pedido nasce com os materiais do produto, todos "falta conferir".
- * A producao marca o que ja tem; o que continua faltando vira a lista de compras.
- */
 @Service
 @RequiredArgsConstructor
 public class MaterialService {
@@ -48,7 +44,6 @@ public class MaterialService {
         return PedidoMapper.paraResposta(pedido);
     }
 
-    /** Materiais em falta nos pedidos que ainda nao entraram em producao. */
     @Transactional(readOnly = true)
     public List<ItemCompraResponse> listarCompras() {
         List<Pedido> pedidos = pedidoRepository.findByStatusInOrderByDataEntregaAsc(

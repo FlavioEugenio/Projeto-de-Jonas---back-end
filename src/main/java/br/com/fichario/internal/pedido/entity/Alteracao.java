@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-/** Mudanca feita no pedido. Fica pendente ate a producao confirmar ciencia. */
 @Entity
 @Table(name = "alteracao")
 public class Alteracao {
@@ -58,16 +57,7 @@ public class Alteracao {
         this.cienciaEm = LocalDateTime.now();
     }
 
-    public boolean isPendente() {
+    boolean isPendente() {
         return cienciaEm == null;
     }
-
-    public Long getId() { return id; }
-    public String getCampo() { return campo; }
-    public String getValorAnterior() { return valorAnterior; }
-    public String getValorNovo() { return valorNovo; }
-    public Usuario getAlteradoPor() { return alteradoPor; }
-    public LocalDateTime getAlteradoEm() { return alteradoEm; }
-    public Usuario getCienciaPor() { return cienciaPor; }
-    public LocalDateTime getCienciaEm() { return cienciaEm; }
 }

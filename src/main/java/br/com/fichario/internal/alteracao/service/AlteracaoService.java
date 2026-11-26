@@ -9,10 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * O cliente muda a personalizacao; a mudanca fica pendente ate a producao confirmar ciencia.
- * Enquanto estiver pendente, o Pedido nao deixa iniciar a producao nem entregar.
- */
 @Service
 @RequiredArgsConstructor
 public class AlteracaoService {

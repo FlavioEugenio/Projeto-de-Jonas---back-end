@@ -16,10 +16,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Raiz do agregado: a fonte unica sobre o pedido. Toda mudanca passa por um metodo
- * desta classe, que valida a regra de negocio e registra o historico.
- */
 @Entity
 @Table(name = "pedido")
 public class Pedido {
@@ -82,7 +78,6 @@ public class Pedido {
     protected Pedido() {
     }
 
-    /** Registra um pedido novo. Os materiais padrao do produto entram como "falta conferir". */
     public Pedido(Cliente cliente, Produto produto, int quantidade, String personalizacao,
                   LocalDate dataEntrega, BigDecimal valorTotal, CanalOrigem canal, Usuario criadoPor) {
         Validacao.obrigatorio(criadoPor, "Usuario").exigirPerfil(Perfil.ATENDIMENTO, Perfil.DONO);
@@ -107,7 +102,6 @@ public class Pedido {
         registrarEvento("Pedido criado.", criadoPor);
     }
 
-    /** A mudanca fica pendente ate a producao confirmar ciencia. */
     public void alterarPersonalizacao(String nova, Usuario autor) {
         exigirPerfil(autor, Perfil.ATENDIMENTO, Perfil.DONO);
         exigirStatus(StatusPedido.RECEBIDO, StatusPedido.EM_PRODUCAO);
@@ -117,7 +111,6 @@ public class Pedido {
         registrarEvento("Personalizacao alterada.", autor);
     }
 
-    /** A producao confirma que viu todas as alteracoes pendentes. */
     public void confirmarCiencia(Usuario responsavel) {
         exigirPerfil(responsavel, Perfil.PRODUCAO);
         List<Alteracao> pendentes = getAlteracoesPendentes();
@@ -138,7 +131,6 @@ public class Pedido {
         registrarEvento("Material " + material.getNome() + " disponivel.", autor);
     }
 
-    /** So inicia sem alteracao pendente e com todos os materiais disponiveis. */
     public void iniciarProducao(Usuario autor) {
         exigirPerfil(autor, Perfil.PRODUCAO, Perfil.DONO);
         exigirStatus(StatusPedido.RECEBIDO);
@@ -156,7 +148,6 @@ public class Pedido {
         mudarStatus(StatusPedido.PRONTO, autor);
     }
 
-    /** Sinal ou pagamento parcial. Nao pode passar do saldo. */
     public void registrarPagamento(BigDecimal valor, FormaPagamento forma, Usuario autor) {
         exigirPerfil(autor, Perfil.ATENDIMENTO, Perfil.DONO);
         exigirStatus(StatusPedido.RECEBIDO, StatusPedido.EM_PRODUCAO, StatusPedido.PRONTO);
@@ -167,7 +158,6 @@ public class Pedido {
         adicionarPagamento(v, forma, autor, null);
     }
 
-    /** So fecha com o saldo completo recebido e com o nome de quem recebeu. */
     public void registrarEntrega(BigDecimal valorRecebido, FormaPagamento forma, String recebidoPor, Usuario autor) {
         exigirPerfil(autor, Perfil.ATENDIMENTO, Perfil.DONO);
         exigirStatus(StatusPedido.PRONTO);
@@ -183,12 +173,10 @@ public class Pedido {
         mudarStatus(StatusPedido.ENTREGUE, autor);
     }
 
-    /** Calculado, nunca digitado: soma dos pagamentos. */
-    public BigDecimal getValorPago() {
+    private BigDecimal getValorPago() {
         return pagamentos.stream().map(Pagamento::getValor).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    /** Calculado, nunca digitado: valor total menos o que ja foi pago. */
     public BigDecimal getSaldo() {
         return valorTotal.subtract(getValorPago());
     }
@@ -197,7 +185,7 @@ public class Pedido {
         return !getAlteracoesPendentes().isEmpty();
     }
 
-    public List<Alteracao> getAlteracoesPendentes() {
+    private List<Alteracao> getAlteracoesPendentes() {
         return alteracoes.stream().filter(Alteracao::isPendente).toList();
     }
 
@@ -244,11 +232,7 @@ public class Pedido {
     public LocalDate getDataEntrega() { return dataEntrega; }
     public BigDecimal getValorTotal() { return valorTotal; }
     public StatusPedido getStatus() { return status; }
-    public CanalOrigem getCanal() { return canal; }
-    public LocalDateTime getCriadoEm() { return criadoEm; }
-    public Usuario getCriadoPor() { return criadoPor; }
     public List<MaterialPedido> getMateriais() { return Collections.unmodifiableList(materiais); }
-    public List<Pagamento> getPagamentos() { return Collections.unmodifiableList(pagamentos); }
-    public List<Alteracao> getAlteracoes() { return Collections.unmodifiableList(alteracoes); }
-    public List<EventoPedido> getHistorico() { return Collections.unmodifiableList(historico); }
+    List<Alteracao> getAlteracoes() { return Collections.unmodifiableList(alteracoes); }
+    List<EventoPedido> getHistorico() { return Collections.unmodifiableList(historico); }
 }

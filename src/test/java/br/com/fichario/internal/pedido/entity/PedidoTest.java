@@ -15,7 +15,6 @@ import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Regras de negocio do Pedido, testadas sem banco e sem servidor. */
 class PedidoTest {
 
     private final Usuario ana = new Usuario("Ana", Perfil.ATENDIMENTO);
